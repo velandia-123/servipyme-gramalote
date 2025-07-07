@@ -108,7 +108,7 @@
       <a href="registro_servicio.php">Ofrecer Servicio Profesional</a>
       <a href="login.php">Iniciar Sesión</a>
       <a href="politica-de-privacidad.php">Políticas de Privacidad</a>
-      <a href="perfil.php">Ver Perfiles</a>
+      <a href="explorar.php">Ver Perfiles</a>
     </div>
     <div class="image-box">
       <!-- Imagen decorativa si deseas añadir una adicional -->

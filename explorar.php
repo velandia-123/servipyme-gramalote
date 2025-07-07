@@ -1,19 +1,9 @@
 <?php
-session_start();
-
-// Proteger el acceso
-if (!isset($_SESSION['nombre'])) {
-    header("Location: login.php");
-    exit();
-}
-
 $conexion = new mysqli("localhost", "root", "", "registro_negocios");
 
 if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
 }
-
-$nombreUsuario = $_SESSION['nombre'];
 
 $consulta_negocios = "SELECT * FROM negocios ORDER BY fecha_registro DESC";
 $resultado_negocios = $conexion->query($consulta_negocios);
@@ -27,11 +17,15 @@ $resultado_servicios = $conexion->query($consulta_servicios);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Perfiles - Servipyme Gramalote</title>
+  <title>Explorar Servicios - Servipyme Gramalote</title>
   <link rel="icon" href="logo_servipyme.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       font-family: 'Montserrat', sans-serif;
@@ -53,30 +47,10 @@ $resultado_servicios = $conexion->query($consulta_servicios);
       text-align: center;
       padding: 20px;
       border-bottom: 1px solid #ccc;
-      position: relative;
     }
 
     header img {
       max-height: 80px;
-    }
-
-    .cerrar-sesion {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-
-    .cerrar-sesion a {
-      text-decoration: none;
-      color: #fff;
-      background-color: #0059b3;
-      padding: 8px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
-
-    .cerrar-sesion a:hover {
-      background-color: #003f80;
     }
 
     h1 {
@@ -187,12 +161,9 @@ $resultado_servicios = $conexion->query($consulta_servicios);
 <body>
   <header>
     <img src="logo_servipyme.jpg" alt="Logo Servipyme">
-    <div class="cerrar-sesion">
-      <a href="cerrar_sesion.php">Cerrar sesión</a>
-    </div>
   </header>
 
-  <h1>Bienvenido<?php echo $nombreUsuario ? ", $nombreUsuario" : ""; ?> a Servipyme Gramalote</h1>
+  <h1>Explora Negocios y Servicios en Gramalote</h1>
 
   <div class="contenedor">
     <div class="perfil">
