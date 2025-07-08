@@ -1,83 +1,114 @@
+<?php
+session_start();
+$conexion = new mysqli("localhost", "root", "", "registro_negocios");
+
+$mensajeError = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nombre = $_POST['nombre'] ?? '';
+    $contrasena = $_POST['contrasena'] ?? '';
+
+    if (!empty($nombre) && !empty($contrasena)) {
+        // Buscar en negocios
+        $stmt = $conexion->prepare("SELECT * FROM negocios WHERE nombre = ?");
+        $stmt->bind_param("s", $nombre);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $usuario = $resultado->fetch_assoc();
+
+        // Si no lo encontró en negocios, buscar en servicios
+        if (!$usuario) {
+            $stmt = $conexion->prepare("SELECT * FROM servicios WHERE nombre = ?");
+            $stmt->bind_param("s", $nombre);
+            $stmt->execute();
+            $resultado = $stmt->get_result();
+            $usuario = $resultado->fetch_assoc();
+        }
+
+        if ($usuario && password_verify($contrasena, $usuario['contrasena'])) {
+            $_SESSION['nombre'] = $usuario['nombre'];
+            header("Location: perfil.php");
+            exit();
+        } else {
+            $mensajeError = "⚠️ Nombre o contraseña incorrectos. Inténtalo nuevamente.";
+        }
+    } else {
+        $mensajeError = "⚠️ Por favor, completa todos los campos.";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Iniciar Sesión - Servipyme Gramalote</title>
+  <title>Iniciar Sesión</title>
   <link rel="icon" href="logo_servipyme.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet"/>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      margin: 0;
-      padding: 0;
       font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(135deg, #e3f2fd, #bbdefb, #e3f2fd);
-      background-size: 400% 400%;
-      animation: fondoAnimado 20s ease infinite;
+      background: linear-gradient(120deg, #e3f2fd, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      animation: fadeIn 1s ease-in-out;
     }
 
-    @keyframes fondoAnimado {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .container {
-      max-width: 420px;
-      margin: 80px auto;
-      padding: 40px;
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    .form-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
       text-align: center;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: aparecerSuave 1.2s ease-out forwards;
-    }
-
-    @keyframes aparecerSuave {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     h2 {
       color: #0d47a1;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     input[type="text"],
-    input[type="email"],
     input[type="password"] {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 1rem;
     }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
+    input[type="submit"] {
       background-color: #0d6efd;
       color: white;
       border: none;
+      padding: 12px 20px;
       border-radius: 8px;
+      font-size: 1rem;
       font-weight: bold;
-      font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background-color 0.3s ease;
+      width: 100%;
     }
 
-    button:hover {
+    input[type="submit"]:hover {
       background-color: #094bcc;
+    }
+
+    .mensaje-error {
+      color: red;
+      margin-top: 15px;
+      font-weight: bold;
     }
 
     .volver {
@@ -87,33 +118,27 @@
     .volver a {
       color: #0d47a1;
       text-decoration: none;
-      font-weight: 500;
+      font-weight: bold;
     }
 
     .volver a:hover {
       text-decoration: underline;
     }
-
-    @media (max-width: 480px) {
-      .container {
-        margin: 40px 20px;
-        padding: 30px;
-      }
-    }
   </style>
 </head>
 <body>
 
-  <?php include 'header.php'; ?>
-
-  <div class="container">
+  <div class="form-container">
     <h2>Iniciar Sesión</h2>
-    <form action="iniciar_sesion.php" method="POST">
-      <input type="text" name="nombre" placeholder="Nombre completo" required />
-      <input type="email" name="email" placeholder="Correo electrónico" required />
-      <input type="password" name="contrasena" placeholder="Contraseña" required />
-      <button type="submit">Ingresar</button>
+    <form action="login.php" method="POST">
+      <input type="text" name="nombre" placeholder="Nombre de usuario" required>
+      <input type="password" name="contrasena" placeholder="Contraseña" required>
+      <input type="submit" value="Ingresar">
     </form>
+
+    <?php if (!empty($mensajeError)): ?>
+      <div class="mensaje-error"><?php echo $mensajeError; ?></div>
+    <?php endif; ?>
 
     <div class="volver">
       <a href="inicio.php">← Volver al inicio</a>

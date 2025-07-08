@@ -34,14 +34,8 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     h2 {
@@ -103,7 +97,7 @@
     <form action="guardar_servicio.php" method="POST" enctype="multipart/form-data">
       <input type="text" name="nombre" placeholder="Nombre completo" required>
 
-      <select name="servicio" required>
+      <select name="habilidad" required>
         <option value="" disabled selected>Tipo de servicio que ofrece</option>
         <option value="Electricista">Electricista</option>
         <option value="Plomería">Plomería</option>
@@ -116,7 +110,7 @@
       </select>
 
       <textarea name="descripcion" rows="4" placeholder="Descripción del servicio" required></textarea>
-      <input type="text" name="ubicacion" placeholder="Ubicación" required>
+      <input type="text" name="municipio" placeholder="Ciudad o municipio" required>
       <input type="text" name="telefono" placeholder="Teléfono" required>
       <input type="email" name="email" placeholder="Correo electrónico" required>
       <input type="password" name="contrasena" placeholder="Contraseña" required>
@@ -129,6 +123,4 @@
   </div>
 
 </body>
-</html>
-
 </html>

@@ -1,53 +1,48 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+session_start();
+$conexion = new mysqli("localhost", "root", "", "registro_negocios");
 
-// Conexión a la base de datos
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db = "registro_negocios";
-
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die("Error de conexión: " . $conn->connect_error);
+if ($conexion->connect_error) {
+    die("Conexión fallida: " . $conexion->connect_error);
 }
 
-// Recoger datos del formulario
-$nombre     = $_POST['nombre'];
+// Obtener los datos del formulario
+$nombre = $_POST['nombre'];
 $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
-$habilidad  = $_POST['servicio'];
+$habilidad = $_POST['habilidad'];
 $descripcion = $_POST['descripcion'];
-$municipio   = $_POST['ubicacion'];
-$telefono    = $_POST['telefono'];
-$email       = $_POST['email'];
+$municipio = $_POST['municipio'];
+$telefono = $_POST['telefono'];
+$email = $_POST['email'];
 
-// Procesar imagen si fue cargada
-$foto_ruta = "";
-if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
-    $foto_nombre = uniqid() . "_" . basename($_FILES['foto']['name']);
-    $foto_tmp = $_FILES['foto']['tmp_name'];
-    $foto_ruta = "uploads/" . $foto_nombre;
+// Procesar la foto (opcional)
+$foto = "";
+if (isset($_FILES['foto']) && $_FILES['foto']['error'] == UPLOAD_ERR_OK) {
+    $fotoNombre = uniqid() . "_" . $_FILES['foto']['name'];
+    $fotoRuta = "uploads/" . $fotoNombre;
 
-    if (!move_uploaded_file($foto_tmp, $foto_ruta)) {
-        die("Error al subir la imagen.");
+    if (!is_dir("uploads")) {
+        mkdir("uploads");
+    }
+
+    if (move_uploaded_file($_FILES['foto']['tmp_name'], $fotoRuta)) {
+        $foto = $fotoRuta;
     }
 }
 
 // Insertar en la base de datos
-$sql = "INSERT INTO servicios (nombre, contrasena, habilidad, descripcion, municipio, telefono, email, foto)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ssssssss", $nombre, $contrasena, $habilidad, $descripcion, $municipio, $telefono, $email, $foto_ruta);
+$stmt = $conexion->prepare("INSERT INTO servicios (nombre, contrasena, habilidad, descripcion, municipio, telefono, email, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("ssssssss", $nombre, $contrasena, $habilidad, $descripcion, $municipio, $telefono, $email, $foto);
 
 if ($stmt->execute()) {
-    header("Location: perfil.php?nombre=" . urlencode($nombre));
+    // Iniciar sesión automáticamente
+    $_SESSION['nombre'] = $nombre;
+    header("Location: perfil.php");
     exit();
 } else {
-    echo "Error al registrar el servicio: " . $conn->error;
+    echo "Error al guardar el servicio: " . $stmt->error;
 }
 
 $stmt->close();
-$conn->close();
+$conexion->close();
 ?>

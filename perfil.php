@@ -32,7 +32,6 @@ $resultado_servicios = $conexion->query($consulta_servicios);
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Montserrat', sans-serif;
       background: linear-gradient(-45deg, #ffffff, #e6f0ff, #cce0ff, #ffffff);
@@ -41,7 +40,6 @@ $resultado_servicios = $conexion->query($consulta_servicios);
       color: #002244;
       min-height: 100vh;
     }
-
     @keyframes animarFondo {
       0% {background-position: 0% 50%;}
       50% {background-position: 100% 50%;}
@@ -136,6 +134,37 @@ $resultado_servicios = $conexion->query($consulta_servicios);
       color: #002244;
     }
 
+    .botones-contacto {
+      margin-top: 10px;
+    }
+
+    .botones-contacto button {
+      padding: 8px 14px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .correo-btn {
+      background-color: #0077cc;
+      color: white;
+    }
+
+    .correo-btn:hover {
+      background-color: #005fa3;
+    }
+
+    .whatsapp-btn {
+      background-color: #25D366;
+      color: white;
+    }
+
+    .whatsapp-btn:hover {
+      background-color: #1ebe5d;
+    }
+
     .volver {
       text-align: center;
       margin: 40px 0 20px;
@@ -165,22 +194,10 @@ $resultado_servicios = $conexion->query($consulta_servicios);
     }
 
     @media (max-width: 768px) {
-      .item {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      header img {
-        max-height: 60px;
-      }
-
-      .item img {
-        margin: auto;
-      }
-
-      .volver a {
-        width: 90%;
-      }
+      .item { flex-direction: column; align-items: flex-start; }
+      header img { max-height: 60px; }
+      .item img { margin: auto; }
+      .volver a { width: 90%; }
     }
   </style>
 </head>
@@ -204,10 +221,19 @@ $resultado_servicios = $conexion->query($consulta_servicios);
           <?php endif; ?>
           <div class="item-info">
             <h3><?php echo htmlspecialchars($negocio['nombre']); ?></h3>
+            <p><strong>Categoría:</strong> <?php echo htmlspecialchars($negocio['categoria']); ?></p>
             <p><strong>Ubicación:</strong> <?php echo htmlspecialchars($negocio['direccion'] . ', ' . $negocio['municipio']); ?></p>
             <p><strong>Teléfono:</strong> <?php echo htmlspecialchars($negocio['telefono']); ?></p>
             <p><strong>Email:</strong> <?php echo htmlspecialchars($negocio['email']); ?></p>
             <p><strong>Descripción:</strong> <?php echo htmlspecialchars($negocio['descripcion']); ?></p>
+            <div class="botones-contacto">
+              <a href="mailto:<?php echo htmlspecialchars($negocio['email']); ?>">
+                <button class="correo-btn">📧 Correo</button>
+              </a>
+              <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $negocio['telefono']); ?>" target="_blank">
+                <button class="whatsapp-btn">💬 WhatsApp</button>
+              </a>
+            </div>
           </div>
         </div>
       <?php endwhile; ?>
@@ -222,11 +248,19 @@ $resultado_servicios = $conexion->query($consulta_servicios);
           <?php endif; ?>
           <div class="item-info">
             <h3><?php echo htmlspecialchars($servicio['nombre']); ?></h3>
-            <p><strong>Servicio:</strong> <?php echo htmlspecialchars($servicio['servicio']); ?></p>
+            <p><strong>Habilidad:</strong> <?php echo htmlspecialchars($servicio['habilidad']); ?></p>
             <p><strong>Ubicación:</strong> <?php echo htmlspecialchars($servicio['municipio']); ?></p>
             <p><strong>Teléfono:</strong> <?php echo htmlspecialchars($servicio['telefono']); ?></p>
             <p><strong>Email:</strong> <?php echo htmlspecialchars($servicio['email']); ?></p>
             <p><strong>Descripción:</strong> <?php echo htmlspecialchars($servicio['descripcion']); ?></p>
+            <div class="botones-contacto">
+              <a href="mailto:<?php echo htmlspecialchars($servicio['email']); ?>">
+                <button class="correo-btn">📧 Correo</button>
+              </a>
+              <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $servicio['telefono']); ?>?text=<?php echo urlencode('Hola, vi tu perfil en Servipyme y me interesa tu habilidad de ' . $servicio['habilidad'] . '. ¿Podemos hablar?'); ?>" target="_blank">
+                <button class="whatsapp-btn">💬 WhatsApp</button>
+              </a>
+            </div>
           </div>
         </div>
       <?php endwhile; ?>
