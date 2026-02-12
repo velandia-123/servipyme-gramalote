@@ -1,149 +1,191 @@
 <?php
-session_start();
-$conexion = new mysqli("localhost", "root", "", "registro_negocios");
+// login.php - versión unificada (formulario + lógica + estilo moderno)
+require_once 'helpers.php';    // contiene secure_session_start()
+require_once 'conexion.php';   // define $conn (mysqli)
 
-$mensajeError = "";
+secure_session_start();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nombre = $_POST['nombre'] ?? '';
-    $contrasena = $_POST['contrasena'] ?? '';
+// Si ya está logueado, redirigir a perfil
+if (!empty($_SESSION['id'])) {
+    header('Location: perfil.php');
+    exit();
+}
 
-    if (!empty($nombre) && !empty($contrasena)) {
-        // Buscar en negocios
-        $stmt = $conexion->prepare("SELECT * FROM negocios WHERE nombre = ?");
-        $stmt->bind_param("s", $nombre);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        $usuario = $resultado->fetch_assoc();
+// --- Procesar login si viene por POST ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = filter_var(trim($_POST['username'] ?? $_POST['email'] ?? ''), FILTER_SANITIZE_STRING);
+    $password = $_POST['contrasena'] ?? '';
 
-        // Si no lo encontró en negocios, buscar en servicios
-        if (!$usuario) {
-            $stmt = $conexion->prepare("SELECT * FROM servicios WHERE nombre = ?");
-            $stmt->bind_param("s", $nombre);
-            $stmt->execute();
-            $resultado = $stmt->get_result();
-            $usuario = $resultado->fetch_assoc();
-        }
-
-        if ($usuario && password_verify($contrasena, $usuario['contrasena'])) {
-            $_SESSION['nombre'] = $usuario['nombre'];
-            header("Location: perfil.php");
-            exit();
-        } else {
-            $mensajeError = "⚠️ Nombre o contraseña incorrectos. Inténtalo nuevamente.";
-        }
+    if ($username === '' || $password === '') {
+        $error = "Por favor complete todos los campos.";
     } else {
-        $mensajeError = "⚠️ Por favor, completa todos los campos.";
+        // Buscar usuario en tablas 'negocios' y 'servicios'
+        function find_user($conn, $username) {
+            $tables = ['negocios', 'servicios'];
+            foreach ($tables as $table) {
+                $sql = "SELECT id, nombre, contrasena, email, telefono 
+                        FROM `$table` 
+                        WHERE email = ? OR telefono = ? 
+                        LIMIT 1";
+                $stmt = $conn->prepare($sql);
+                if (!$stmt) continue;
+                $stmt->bind_param('ss', $username, $username);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                if ($res && $row = $res->fetch_assoc()) {
+                    $row['tabla'] = $table;
+                    $stmt->close();
+                    return $row;
+                }
+                $stmt->close();
+            }
+            return null;
+        }
+
+        $user = find_user($conn, $username);
+
+        if ($user) {
+            $stored_hash = $user['contrasena'] ?? '';
+            if (password_verify($password, $stored_hash) || $stored_hash === $password) {
+                // Si estaba en texto plano, actualizar a hash
+                if ($stored_hash === $password) {
+                    $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $table = $user['tabla'];
+                    $upd = $conn->prepare("UPDATE `$table` SET contrasena = ? WHERE id = ?");
+                    if ($upd) {
+                        $upd->bind_param('si', $new_hash, $user['id']);
+                        $upd->execute();
+                        $upd->close();
+                    }
+                }
+
+                // Iniciar sesión
+                session_regenerate_id(true);
+                $_SESSION['id'] = $user['id'];
+                $_SESSION['nombre'] = $user['nombre'];
+                $_SESSION['tabla'] = $user['tabla'];
+                $conn->close();
+                header('Location: perfil.php');
+                exit();
+            } else {
+                $error = "Credenciales incorrectas.";
+            }
+        } else {
+            $error = "Usuario no encontrado.";
+        }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Iniciar Sesión</title>
-  <link rel="icon" href="logo_servipyme.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión - Servipymes Gramalote</title>
+  <link rel="icon" href="logo_servipyme.png" type="image/png">
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(120deg, #e3f2fd, #ffffff);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      animation: fadeIn 1s ease-in-out;
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #f0f2f5; 
+      margin: 0; 
+      padding: 0; 
+      display:flex; 
+      flex-direction:column; 
+      height:100vh; 
     }
-
+    header { 
+      background: #1877f2; 
+      color: white; 
+      padding: 15px; 
+      text-align: center; 
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+    header h1 { margin:0; font-size:1.8rem; font-weight:bold; }
+    .login-container {
+      flex:1; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center;
+    }
+    .login-box {
+      background:white; 
+      padding:30px; 
+      border-radius:15px; 
+      box-shadow:0 4px 8px rgba(0,0,0,0.1); 
+      width:100%; 
+      max-width:400px; 
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    .login-box h2 {
+      text-align:center; 
+      margin-bottom:20px; 
+      color:#1877f2;
+    }
+    .login-box input {
+      width:100%; 
+      padding:12px; 
+      margin:10px 0; 
+      border-radius:10px; 
+      border:1px solid #ccc; 
+      font-size:1rem;
+    }
+    .btn-login {
+      background:#1877f2; 
+      color:white; 
+      border:none; 
+      padding:12px; 
+      width:100%; 
+      border-radius:30px; 
+      font-size:1rem; 
+      font-weight:bold; 
+      cursor:pointer; 
+      transition:background 0.3s;
+    }
+    .btn-login:hover { background:#0f5bcc; }
+    .error { 
+      background:#ff4b5c; 
+      color:white; 
+      padding:10px; 
+      border-radius:8px; 
+      margin-bottom:15px; 
+      text-align:center; 
+      font-weight:bold;
+    }
+    .register-link {
+      text-align:center; 
+      margin-top:15px;
+    }
+    .register-link a { 
+      color:#1877f2; 
+      text-decoration:none; 
+      font-weight:bold; 
+    }
+    .register-link a:hover { text-decoration:underline; }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .form-container {
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    h2 {
-      color: #0d47a1;
-      margin-bottom: 20px;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-
-    input[type="submit"] {
-      background-color: #0d6efd;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      width: 100%;
-    }
-
-    input[type="submit"]:hover {
-      background-color: #094bcc;
-    }
-
-    .mensaje-error {
-      color: red;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-
-    .volver {
-      margin-top: 20px;
-    }
-
-    .volver a {
-      color: #0d47a1;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .volver a:hover {
-      text-decoration: underline;
+      from {opacity:0; transform: translateY(-20px);}
+      to {opacity:1; transform: translateY(0);}
     }
   </style>
 </head>
 <body>
-
-  <div class="form-container">
-    <h2>Iniciar Sesión</h2>
-    <form action="login.php" method="POST">
-      <input type="text" name="nombre" placeholder="Nombre de usuario" required>
-      <input type="password" name="contrasena" placeholder="Contraseña" required>
-      <input type="submit" value="Ingresar">
-    </form>
-
-    <?php if (!empty($mensajeError)): ?>
-      <div class="mensaje-error"><?php echo $mensajeError; ?></div>
-    <?php endif; ?>
-
-    <div class="volver">
-      <a href="inicio.php">← Volver al inicio</a>
+  <header>
+    <h1>Servipymes Gramalote</h1>
+  </header>
+  <div class="login-container">
+    <div class="login-box">
+      <h2>Iniciar Sesión</h2>
+      <?php if (!empty($error)): ?>
+        <div class="error"><?= htmlspecialchars($error) ?></div>
+      <?php endif; ?>
+      <form method="post" action="login.php">
+        <input type="text" name="username" placeholder="Correo o Teléfono" required>
+        <input type="password" name="contrasena" placeholder="Contraseña" required>
+        <button type="submit" class="btn-login">Ingresar</button>
+      </form>
+      <div class="register-link">
+        <p>¿No tienes cuenta? <a href="registro.php">Regístrate</a></p>
+      </div>
     </div>
   </div>
-
 </body>
 </html>

@@ -1,278 +1,288 @@
 <?php
-session_start();
+require_once 'helpers.php';
+secure_session_start();
+require_once 'conexion.php';
 
-// Proteger el acceso
-if (!isset($_SESSION['nombre'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['id'])) {
+    header("Location: login.html");
     exit();
 }
 
-$conexion = new mysqli("localhost", "root", "", "registro_negocios");
+$usuario_id = $_SESSION['id'];
+$usuario_tabla = $_SESSION['tabla'] ?? '';
 
-if ($conexion->connect_error) {
-    die("Conexión fallida: " . $conexion->connect_error);
-}
+// Obtener negocios
+$sql_negocios = "SELECT id, nombre, categoria, descripcion, ubicacion, telefono, foto 
+                 FROM negocios ORDER BY fecha_registro DESC";
+$result_negocios = $conn->query($sql_negocios);
+$negocios = $result_negocios ? $result_negocios->fetch_all(MYSQLI_ASSOC) : [];
 
-$nombreUsuario = $_SESSION['nombre'];
+// Obtener servicios
+$sql_servicios = "SELECT id, nombre, servicio, descripcion, ubicacion, telefono, foto 
+                  FROM servicios ORDER BY fecha_registro DESC";
+$result_servicios = $conn->query($sql_servicios);
+$servicios = $result_servicios ? $result_servicios->fetch_all(MYSQLI_ASSOC) : [];
 
-$consulta_negocios = "SELECT * FROM negocios ORDER BY fecha_registro DESC";
-$resultado_negocios = $conexion->query($consulta_negocios);
-
-$consulta_servicios = "SELECT * FROM servicios ORDER BY fecha_registro DESC";
-$resultado_servicios = $conexion->query($consulta_servicios);
+$conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Perfiles - Servipyme Gramalote</title>
-  <link rel="icon" href="logo_servipyme.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(-45deg, #ffffff, #e6f0ff, #cce0ff, #ffffff);
-      background-size: 400% 400%;
-      animation: animarFondo 25s ease infinite;
-      color: #002244;
-      min-height: 100vh;
-    }
-    @keyframes animarFondo {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servipymes Gramalote</title>
+<link rel="icon" href="logo_servipyme.png">
 
-    header {
-      background-color: #f8f8f8;
-      text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid #ccc;
-      position: relative;
-    }
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+font-family:'Segoe UI',sans-serif;
+background:#f0f2f5;
+color:#1c1e21;        
+overflow-x:hidden;
+}
 
-    header img {
-      max-height: 80px;
-    }
 
-    .cerrar-sesion {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
+header{
+position:sticky;
+top:0;
+background:rgba(80, 80, 80, 0.6);
+backdrop-filter:blur(15px);
+padding:15px 30px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+z-index:1000;
+}
 
-    .cerrar-sesion a {
-      text-decoration: none;
-      color: #fff;
-      background-color: #0059b3;
-      padding: 8px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
+header h1{
+font-size:1.8rem;
+letter-spacing:1px;
+}
 
-    .cerrar-sesion a:hover {
-      background-color: #003f80;
-    }
+.nav-right a{
+margin-left:15px;
+text-decoration:none;
+color:#fff;
+font-weight:bold;
+padding:8px 15px;
+border-radius:20px;
+transition:0.3s;
+}
 
-    h1 {
-      text-align: center;
-      color: #003366;
-      margin: 20px 0;
-    }
+.nav-right a:hover{
+background:#1877f2;
+}
 
-    .contenedor {
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
+main{
+max-width:1300px;
+margin:auto;
+padding:40px 20px;
+}
 
-    .perfil {
-      background-color: rgba(255,255,255,0.95);
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 40px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    }
+.section-title{
+font-size:1.8rem;
+margin-bottom:20px;
+position:relative;
+}
 
-    .perfil h2 {
-      color: #0059b3;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
+.feed{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:25px;
+}
 
-    .item {
-      background-color: #f0f8ff;
-      border-radius: 10px;
-      margin: 15px 0;
-      padding: 15px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
+.card{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(20px);
+border-radius:20px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,0.3);
+transition:0.4s ease;
+position:relative;
+animation:fadeUp 0.8s ease forwards;
+}
 
-    .item img {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 10px;
-      border: 2px solid #0059b3;
-    }
+.card:hover{
+transform:translateY(-10px) scale(1.02);
+box-shadow:0 20px 40px rgba(0,0,0,0.5);
+}
 
-    .item-info {
-      flex: 1;
-      color: #003366;
-    }
+.banner{
+height:180px;
+background:linear-gradient(45deg,#1877f2,#00c6ff);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:1.3rem;
+font-weight:bold;
+}
 
-    .item-info h3 {
-      margin: 0;
-      color: #002244;
-    }
+.card img{
+width:100%;
+height:180px;
+object-fit:cover;
+}
 
-    .botones-contacto {
-      margin-top: 10px;
-    }
+.card-content{
+padding:20px;
+}
 
-    .botones-contacto button {
-      padding: 8px 14px;
-      margin-right: 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+.card-content h3{
+margin-bottom:10px;
+}
 
-    .correo-btn {
-      background-color: #0077cc;
-      color: white;
-    }
+.whatsapp-btn{
+display:inline-block;
+margin-top:15px;
+padding:10px 15px;
+background:#25d366;
+color:white;
+border-radius:30px;
+text-decoration:none;
+font-weight:bold;
+transition:0.3s;
+}
 
-    .correo-btn:hover {
-      background-color: #005fa3;
-    }
+.whatsapp-btn:hover{
+background:#1ebe5d;
+}
 
-    .whatsapp-btn {
-      background-color: #25D366;
-      color: white;
-    }
+.edit-btn{
+position:absolute;
+top:15px;
+right:15px;
+background:#ff9800;
+padding:8px 12px;
+border-radius:20px;
+font-size:0.8rem;
+text-decoration:none;
+color:#fff;
+font-weight:bold;
+}
 
-    .whatsapp-btn:hover {
-      background-color: #1ebe5d;
-    }
+.map-btn{
+margin:60px auto;
+display:block;
+padding:15px 30px;
+background:#ff4b5c;
+color:white;
+border:none;
+border-radius:40px;
+font-size:1rem;
+cursor:pointer;
+transition:0.3s;
+}
 
-    .volver {
-      text-align: center;
-      margin: 40px 0 20px;
-    }
+.map-btn:hover{
+background:#e33b4c;
+}
 
-    .volver a {
-      background-color: #0059b3;
-      color: #fff;
-      padding: 12px 30px;
-      text-decoration: none;
-      border-radius: 10px;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
+.notification{
+position:fixed;
+bottom:30px;
+right:30px;
+background:#ff4b5c;
+padding:15px 25px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+display:none;
+animation:slideIn 0.5s ease;
+}
 
-    .volver a:hover {
-      background-color: #003f80;
-    }
+@keyframes fadeUp{
+from{opacity:0;transform:translateY(40px);}
+to{opacity:1;transform:translateY(0);}
+}
 
-    footer {
-      background-color: #f0f0f0;
-      text-align: center;
-      padding: 12px;
-      font-size: 0.9rem;
-      color: #333;
-      border-top: 1px solid #ccc;
-    }
-
-    @media (max-width: 768px) {
-      .item { flex-direction: column; align-items: flex-start; }
-      header img { max-height: 60px; }
-      .item img { margin: auto; }
-      .volver a { width: 90%; }
-    }
-  </style>
+@keyframes slideIn{
+from{transform:translateX(100%);}
+to{transform:translateX(0);}
+}
+</style>
 </head>
 <body>
-  <header>
-    <img src="logo_servipyme.jpg" alt="Logo Servipyme">
-    <div class="cerrar-sesion">
-      <a href="cerrar_sesion.php">Cerrar sesión</a>
-    </div>
-  </header>
 
-  <h1>Bienvenido<?php echo $nombreUsuario ? ", $nombreUsuario" : ""; ?> a Servipyme Gramalote</h1>
+<header>
+<h1>Servipymes Gramalote</h1>
+<div class="nav-right">
+<a href="cerrar_sesion.php">Cerrar sesión</a>
+</div>
+</header>
 
-  <div class="contenedor">
-    <div class="perfil">
-      <h2>Negocios registrados</h2>
-      <?php while ($negocio = $resultado_negocios->fetch_assoc()) : ?>
-        <div class="item">
-          <?php if (!empty($negocio['foto'])) : ?>
-            <img src="<?php echo htmlspecialchars($negocio['foto']); ?>" alt="Foto del negocio">
-          <?php endif; ?>
-          <div class="item-info">
-            <h3><?php echo htmlspecialchars($negocio['nombre']); ?></h3>
-            <p><strong>Categoría:</strong> <?php echo htmlspecialchars($negocio['categoria']); ?></p>
-            <p><strong>Ubicación:</strong> <?php echo htmlspecialchars($negocio['direccion'] . ', ' . $negocio['municipio']); ?></p>
-            <p><strong>Teléfono:</strong> <?php echo htmlspecialchars($negocio['telefono']); ?></p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($negocio['email']); ?></p>
-            <p><strong>Descripción:</strong> <?php echo htmlspecialchars($negocio['descripcion']); ?></p>
-            <div class="botones-contacto">
-              <a href="mailto:<?php echo htmlspecialchars($negocio['email']); ?>">
-                <button class="correo-btn">📧 Correo</button>
-              </a>
-              <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $negocio['telefono']); ?>" target="_blank">
-                <button class="whatsapp-btn">💬 WhatsApp</button>
-              </a>
-            </div>
-          </div>
-        </div>
-      <?php endwhile; ?>
-    </div>
+<main>
 
-    <div class="perfil">
-      <h2>Servicios registrados</h2>
-      <?php while ($servicio = $resultado_servicios->fetch_assoc()) : ?>
-        <div class="item">
-          <?php if (!empty($servicio['foto'])) : ?>
-            <img src="<?php echo htmlspecialchars($servicio['foto']); ?>" alt="Foto del servicio">
-          <?php endif; ?>
-          <div class="item-info">
-            <h3><?php echo htmlspecialchars($servicio['nombre']); ?></h3>
-            <p><strong>Habilidad:</strong> <?php echo htmlspecialchars($servicio['habilidad']); ?></p>
-            <p><strong>Ubicación:</strong> <?php echo htmlspecialchars($servicio['municipio']); ?></p>
-            <p><strong>Teléfono:</strong> <?php echo htmlspecialchars($servicio['telefono']); ?></p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($servicio['email']); ?></p>
-            <p><strong>Descripción:</strong> <?php echo htmlspecialchars($servicio['descripcion']); ?></p>
-            <div class="botones-contacto">
-              <a href="mailto:<?php echo htmlspecialchars($servicio['email']); ?>">
-                <button class="correo-btn">📧 Correo</button>
-              </a>
-              <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $servicio['telefono']); ?>?text=<?php echo urlencode('Hola, vi tu perfil en Servipyme y me interesa tu habilidad de ' . $servicio['habilidad'] . '. ¿Podemos hablar?'); ?>" target="_blank">
-                <button class="whatsapp-btn">💬 WhatsApp</button>
-              </a>
-            </div>
-          </div>
-        </div>
-      <?php endwhile; ?>
-    </div>
+<h2 class="section-title">🏢 Negocios</h2>
+<div class="feed">
+<?php foreach ($negocios as $row): ?>
+<div class="card">
+<div class="banner">
+<?php echo htmlspecialchars($row['categoria']); ?>
+</div>
 
-    <div class="volver">
-      <a href="inicio.php">← Volver al inicio</a>
-    </div>
-  </div>
+<?php if (!empty($row['foto'])): ?>
+<img src="<?php echo htmlspecialchars($row['foto']); ?>">
+<?php endif; ?>
 
-  <footer>
-    &copy; 2025 Servipyme Gramalote | Desarrollado por Daniel Antonio Velandia - Ficha 2977518 | contacto: velandiadanie9@gmail.com
-  </footer>
+<div class="card-content">
+<h3><?php echo htmlspecialchars($row['nombre']); ?></h3>
+<p><strong>Ubicación:</strong> <?php echo htmlspecialchars($row['ubicacion']); ?></p>
+<p><?php echo htmlspecialchars($row['descripcion']); ?></p>
+
+<a class="whatsapp-btn" target="_blank"
+href="https://wa.me/<?php echo htmlspecialchars($row['telefono']); ?>">WhatsApp</a>
+
+<?php if ($usuario_tabla === 'negocios' && $usuario_id == $row['id']): ?>
+<a class="edit-btn" href="editar_perfil.php">Editar perfil</a>
+<?php endif; ?>
+</div>
+</div>
+<?php endforeach; ?>
+</div>
+
+<h2 class="section-title" style="margin-top:60px;">👨‍🔧 Servicios</h2>
+<div class="feed">
+<?php foreach ($servicios as $row): ?>
+<div class="card">
+<div class="banner">
+<?php echo htmlspecialchars($row['servicio']); ?>
+</div>
+
+<?php if (!empty($row['foto'])): ?>
+<img src="<?php echo htmlspecialchars($row['foto']); ?>">
+<?php endif; ?>
+
+<div class="card-content">
+<h3><?php echo htmlspecialchars($row['nombre']); ?></h3>
+<p><strong>Ubicación:</strong> <?php echo htmlspecialchars($row['ubicacion']); ?></p>
+<p><?php echo htmlspecialchars($row['descripcion']); ?></p>
+
+<a class="whatsapp-btn" target="_blank"
+href="https://wa.me/<?php echo htmlspecialchars($row['telefono']); ?>">WhatsApp</a>
+
+<?php if ($usuario_tabla === 'servicios' && $usuario_id == $row['id']): ?>
+<a class="edit-btn" href="editar_perfil.php">Editar perfil</a>
+<?php endif; ?>
+</div>
+</div>
+<?php endforeach; ?>
+</div>
+
+<button class="map-btn" onclick="mostrarNotificacion()">📍 Ver mapa</button>
+
+</main>
+
+<div class="notification" id="notif">
+⚠ El mapa no está disponible por ahora.
+</div>
+
+<script>
+function mostrarNotificacion(){
+const notif = document.getElementById('notif');
+notif.style.display='block';
+setTimeout(()=>{notif.style.display='none';},3000);
+}
+</script>
+
 </body>
 </html>

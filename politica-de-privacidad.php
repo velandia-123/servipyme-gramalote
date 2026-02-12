@@ -153,7 +153,7 @@
     <p>Para dudas o solicitudes, escríbenos a: <a href="mailto:servipyme@gramalote.gov.co">servipyme@gramalote.gov.co</a></p>
 
     <div class="volver">
-      <a href="inicio.php">← Volver al inicio</a>
+      <a href="/mi_negocio/index.php">← Volver al inicio</a>
     </div>
   </div>
 
