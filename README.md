@@ -1,41 +1,50 @@
-# 🌟 Servipyme Gramalote
+# Servipymes Gramalote
 
-**Proyecto web para registrar, visualizar y contactar negocios y servicios profesionales del municipio de Gramalote.**
-
----
-
-## 🔧 Funcionalidades principales
-
-- ✅ Registro de negocios con nombre, descripción, ubicación y foto
-- ✅ Registro de personas que ofrecen servicios o habilidades
-- ✅ Inicio de sesión para usuarios registrados
-- ✅ Visualización de todos los perfiles en una sola pantalla
-- ✅ Diseño responsivo y animaciones suaves
-- ✅ Estilo moderno con colores blanco y azul
+**Autor:** Daniel Antonio Velandia – Estudiante ADSO SENA  
+**Repositorio:** [https://github.com/velandia-123/servipyme-gramalote](https://github.com/velandia-123/servipyme-gramalote)  
+**Fecha:** Febrero 2026  
 
 ---
 
-## 💻 Tecnologías utilizadas
+## **Descripción del Proyecto**
 
-- PHP + MySQL (XAMPP)
-- HTML5 + CSS3
-- Git + GitHub
-- Visual Studio Code
-
----
-
-## 🧑‍💻 Desarrollado por
-
-**Daniel Antonio Velandia**  
-Aprendiz SENA | Ficha 2977518  
-📧 velandiadanie9@gmail.com  
-🌐 Proyecto educativo con impacto departamental
+*Servipymes Gramalote* es una plataforma web diseñada para la **gestión de negocios y servicios profesionales** en la región de Gramalote, Norte de Santander.  
+Permite a los usuarios registrar sus negocios o servicios, editar perfiles, subir imágenes y consultar información de manera intuitiva y segura.  
+El sistema está desarrollado en **PHP procedural con sesiones seguras**, conectado a **MySQL**, y con un diseño moderno y responsivo en colores corporativos blanco y azul.
 
 ---
 
-## 📌 Repositorio GitHub
+## **Tecnologías utilizadas**
 
-🔒 Repositorio privado con control de versiones  
-🌟 Para acceder se requiere autorización del desarrollador
+- PHP 7+  
+- MySQL  
+- HTML5 / CSS3 / JavaScript  
+- XAMPP (entorno local)  
+- Git / GitHub (control de versiones)  
+- Visual Studio Code (editor de código)  
 
 ---
+
+## **Funcionalidades principales**
+
+1. **Registro de negocios y servicios profesionales** con validaciones seguras.  
+2. **Inicio de sesión seguro** con control de sesiones.  
+3. **Perfil de usuario completo**, con información detallada y foto.  
+4. **Editar perfil**, incluyendo reemplazo de imagen de manera segura.  
+5. **Visualización de perfiles** de otros negocios o servicios.  
+6. **Diseño moderno y responsivo**, compatible con dispositivos móviles y escritorio.  
+7. **Seguridad básica implementada**, incluyendo prepared statements y sanitización de datos.  
+
+---
+
+## **Instrucciones para instalar y ejecutar localmente**
+
+1. Copia la carpeta `mi_negocio` en tu entorno local (ej. `C:\xampp\htdocs\`).  
+2. Asegúrate de tener XAMPP instalado y Apache + MySQL en ejecución.  
+3. Configura la conexión a la base de datos en `conexion.php`:
+
+```php
+$host = "localhost";
+$usuario = "root";
+$password = "";
+$baseDatos = "registro_negocios";
